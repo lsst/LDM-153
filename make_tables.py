@@ -40,7 +40,6 @@ def make_table_tex(table):
     print("\\hline\\hline\\endfoot", file=output)
     for column in table['columns']:
         if len(column["name"]) > 18:
-            # format_string = "{:s} & \makecell{{\\\\{:s}}} & \makecell{{\\\\{:s}}} & \makecell{{\\\\{:s}}} \\\\"
             format_string = "\multicolumn{{3}}{{l}}{{{:s}}} & \skipcoloring \\\\ \n"
             format_string += " & {:s} & {:s} & {:s} \\\\"
         else:

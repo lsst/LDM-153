@@ -144,7 +144,7 @@ The Object Catalog is partitioned vertically into the following tables:
 
 \begin{itemize}
   \item Object – a table with $\sim$330 most frequently used columns. This table is expected to contain $\sim$47 billion rows by the end of the survey, containing $\sim$48\% in the first data release.
-  \item Object\_APMean – a very narrow table containing aperture photometry mean values, on average $|sim$8 per object.
+  \item Object\_APMean – a very narrow table containing aperture photometry mean values, on average $\sim$8 per object.
   \item Object\_Periodic – a very narrow table containing definitions of periodic features, on average $\sim$32 per object.
   \item Object\_NonPeriodic – a very narrow table containing definitions of non-periodic features, on average $\sim$20 per object.
   \item Object\_Extra – a very wide table with remaining, less frequently used columns, such as covariances for 2 models (Point Source and Bulge+Disk), and Bulge+Disk samples. These are packed into 3 blobs, 66, 168, and 7,200 elements in each blob respectively. Packing is driven by expected access pattern: entire set of elements in a blob or nothing will be accessed. There will be one such row for each row in the Object table.  

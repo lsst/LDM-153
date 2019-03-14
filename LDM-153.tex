@@ -1,10 +1,20 @@
-\documentclass[DM,lsstdraft,toc]{lsstdoc}
+\documentclass[DM,toc]{lsstdoc}
 
 % lsstdoc documentation: https://lsst-texmf.lsst.io/lsstdoc.html
 
 % Package imports go here.
+\usepackage{longtable}
+\usepackage{makecell}
+\usepackage[table]{xcolor}
 
 % Local commands go here.
+
+\newcommand\skipcoloring[0]{%
+\global\advance\rownum-1\relax
+}
+
+\renewcommand\cellalign{tl}
+\rowcolors{2}{gray!25}{white}
 
 % To add a short-form title:
 % \title[Short title]{Title}
@@ -41,6 +51,24 @@ Abstract text.
 % Create the title page.
 % Table of contents is added automatically with the "toc" class option.
 \maketitle
+
+\section{Schema Format and Documentation}
+
+The LSST Database schema master files are stored in ASCII files and version-controlled (git) together with the rest of the LSST software. Each major schema version has its own dedicated file. We currently have a baseline schema, and 6 different versions of schemas for different data challenges DC3a, PT1.1, PT1.2, ImSim, S12\_sdss, and S12\_lsstsim.
+
+Each schema file contains a schema definition interleaved with rich table-level and column-level comments. Additional notes such as information about units are embedded. Comments follow a special HTML-like format that enables auto-generation of web-browsable pages. This approach maximizes vendor-independence of both the schema definition and its documentation. It enables richer documentation, and allows us to add special annotations, not supported by off-the-shelf RDBMS systems.
+
+To ensure that the database schema definition is well integrated with the rest of the LSST domain model, we maintain a copy of the Baseline schema in the Enterprise Architect system.
+
+\section{Stored Procedures and Functions}
+
+We maintain a small set of stored procedures and functions, as well as a set of user-defined functions (UDFs). Since stored procedures and functions typically are vendor-specific, we have tried to limit them to the bare minimum; nevertheless, we now have ~10 such procedures, most related to converting different time formats. The most frequently used functions are written as native user-defined functions for performance and portability reasons. They include support for spherical geometry, photometry conversions, and statistical functions (e.g., median). These spatial functions rely on custom HTM indices to allow fast spatial selections, such as point in circle, polygon or ellipse searches. We are collaborating with the team from Johns Hopkins University that implemented HTM indexing and UDFs for SDSS, and we already incorporated many of their lessons learned into our UDFs (their UDFs were written in C\# for SQL Server, since then the SDSS team converted them to C++ using automated conversion tools.)
+
+Since these UDFs are not LSST-specific and may be of broader interest (to MySQL community and beyond), we maintain them as an open-source project independent from LSST. This project, SciSQL, is hosted on launchpad.net (see https://launchpad.net/scisql/).
+
+\section{Baseline Schema}
+
+\input{core_tables}
 
 \appendix
 % Include all the relevant bib files.

@@ -14,7 +14,6 @@
 }
 
 \renewcommand\cellalign{tl}
-\rowcolors{2}{gray!25}{white}
 
 % To add a short-form title:
 % \title[Short title]{Title}
@@ -62,14 +61,122 @@ To ensure that the database schema definition is well integrated with the rest o
 
 \section{Stored Procedures and Functions}
 
-We maintain a small set of stored procedures and functions, as well as a set of user-defined functions (UDFs). Since stored procedures and functions typically are vendor-specific, we have tried to limit them to the bare minimum; nevertheless, we now have ~10 such procedures, most related to converting different time formats. The most frequently used functions are written as native user-defined functions for performance and portability reasons. They include support for spherical geometry, photometry conversions, and statistical functions (e.g., median). These spatial functions rely on custom HTM indices to allow fast spatial selections, such as point in circle, polygon or ellipse searches. We are collaborating with the team from Johns Hopkins University that implemented HTM indexing and UDFs for SDSS, and we already incorporated many of their lessons learned into our UDFs (their UDFs were written in C\# for SQL Server, since then the SDSS team converted them to C++ using automated conversion tools.)
+We maintain a small set of stored procedures and functions, as well as a set of user-defined functions (UDFs). Since stored procedures and functions typically are vendor-specific, we have tried to limit them to the bare minimum; nevertheless, we now have $\sim10$ such procedures, most related to converting different time formats. The most frequently used functions are written as native user-defined functions for performance and portability reasons. They include support for spherical geometry, photometry conversions, and statistical functions (e.g., median). These spatial functions rely on custom HTM indices to allow fast spatial selections, such as point in circle, polygon or ellipse searches. We are collaborating with the team from Johns Hopkins University that implemented HTM indexing and UDFs for SDSS, and we already incorporated many of their lessons learned into our UDFs (their UDFs were written in C\# for SQL Server, since then the SDSS team converted them to C++ using automated conversion tools.)
 
 Since these UDFs are not LSST-specific and may be of broader interest (to MySQL community and beyond), we maintain them as an open-source project independent from LSST. This project, SciSQL, is hosted on launchpad.net (see https://launchpad.net/scisql/).
 
+\section{Selected Catalogs}
+
+The baseline schema is driven primarily by the Data Products Definitions Document (LSE-163). The schema can be divided into several logical groups:
+
+\begin{itemize}
+  \item Core Catalogs
+  \item Metadata Catalogs
+  \item Provenance Catalogs
+  \item SDQA
+\end{itemize}
+
+Here, a catalog refers to a group of closely-related tables that act as a unified dataset from an end user's point of view.
+
+\subsection{Core Catalogs}
+
+The core catalogs can be divided into:
+\begin{itemize}
+  \item Level 1 Catalogs: DiaObject, SSObject. DiaSource and DiaForcedSource.
+  \item Level 2 Catalogs: Object, Source, ForcedSource.
+\end{itemize}
+
+\textbf{DiaObject} table contains information about astronomical objects measured on difference images. For reproducibility reasons (described in LDM-135, chapter 3.1), we expect to create a new row each time there is an update to a diaObject, thus the total number of rows in that table is higher than the unique number of diaObjects. 
+
+\textbf{SSObject} table contains information about Solar System (also called moving) objects.
+
+\textbf{DiaSource} table contains information about individual measurements of astronomical objects on different images.
+
+\textbf{DiaForcedSource} contains photometry measurements about low signal-to-noise detections done on individual difference image exposures in each place where an object was detected on a previous difference image within one month.
+
+\textbf{Object} Catalog contains information about static astronomical objects measured on a stacked image. It is the most commonly used catalog.
+
+\textbf{Source} Catalog contains information about high signal-to-noise (>5 sigma) detections on single frame images.
+
+\textbf{ForcedSource} table contains photometry measurements about low signal-to-noise detections done on individual exposures in each place where an object was detected on a stacked image. Due to the nature of these detections only a few parameters can be measured, thus the table is very narrow, however it is by far the largest in terms of row-count.
+
+\textbf{DiaObject\_To\_Object\_Match} table keeps a mapping of diaObjects to nearby objects, used primarily for user data analysis. For rapid real-time queries we maintain three nearbyObj columns in DiaObject.
+
+\subsubsection{Sizes}
+
+The table below provides a rough count (size, rows, columns) for core tables (in the last Data Release, counting data only, e.g., size of persistent overheads such as indices is not reflected here). The exact numbers for each DR can be found in LDM-141.
+
+\begin{tabular}{lccc}
+  \hline\hline
+  Table & Size [TB] & Rows  [billions] & Columns \\
+  \hline\hline
+  Object (narrow) & $\sim107$ & $\sim47$ & $\sim330$ \\
+  Object (all extras) & $\sim1,200$ & Largest $\sim1,500$ & $\sim7,650$ \\
+  Source & $\sim5,000$ & $\sim9,000$ & $\sim50$ \\
+  ForcedSource & $\sim1,900$ & $\sim50,000$ & 6 \\
+  SSObject & $\sim0.003$ & 0.006 & $\sim80$ \\
+  DiaObject & $\sim27$ (76 max) & $\sim15$ unique ($\sim44$ max) & $\sim260$ \\
+  DiaSource & $\sim23$ & $\sim45$ & $\sim70$ \\
+  DiaForcedSource & $\sim13$ & $\sim300$ & 8 \\
+  \hline
+\end{tabular}
+
+We expect to keep refining the baseline schema extensively through LSST’s construction, and will likely end up adding a small number of additional columns we haven’t thought about so far. Since the schema is used for cost estimation, such changes would increase overall size of the database (and consequently, the cost), so we have reserved in the costing model (LDM-141) 25\% of each table size\footnote{With the exception of ForcedSource and DiaForcedSource} for yet-unknown columns. Further, the costing model assumes a 3\% increase in row size for each Data Release.
+
+\subsubsection{Partitioning}
+
+To optimize disk I/O and ensure frequently accessed columns are collocated, and to avoid unnecessary I/O, selected Catalogs are \textit{vertically partitioned}.
+
+The Object Catalog is partitioned vertically into the following tables: 
+
+\begin{itemize}
+  \item Object – a table with $\sim$330 most frequently used columns. This table is expected to contain $\sim$47 billion rows by the end of the survey, containing $\sim$48\% in the first data release.
+  \item Object\_APMean – a very narrow table containing aperture photometry mean values, on average $|sim$8 per object.
+  \item Object\_Periodic – a very narrow table containing definitions of periodic features, on average $\sim$32 per object.
+  \item Object\_NonPeriodic – a very narrow table containing definitions of non-periodic features, on average $\sim$20 per object.
+  \item Object\_Extra – a very wide table with remaining, less frequently used columns, such as covariances for 2 models (Point Source and Bulge+Disk), and Bulge+Disk samples. These are packed into 3 blobs, 66, 168, and 7,200 elements in each blob respectively. Packing is driven by expected access pattern: entire set of elements in a blob or nothing will be accessed. There will be one such row for each row in the Object table.  
+\end{itemize}
+
+The Source Catalog consists of two tables: Source and Source\_APMean, the latter is similar to Object\_APMean.
+
+Since managing trillions of rows in a single table is close to impossible, in addition to vertical partitioning, all core catalogs will be horizontally partitioned, The Level 1 catalogs will be partitioned by time into a small set of tables, and all large Level 2 catalogs will be partitioned spatially into $\sim$20,000 partitions for each table. Further details related to horizontal partitioning of these tables are discussed in LDM-135 (\textit{LSST Database Design}).
+
+\subsubsection{Diagram}
+
+The diagram below depicts all core tables, and their relations.
+
+\subsection{Metadata Catalogs}
+
+Metadata catalogs contains information about LSST ``raw exposures'' and ``science calibrated visits''. Information is tracked at different levels:
+
+\begin{itemize}
+  \item focal plane (entire exposure/visit),
+  \item raft (raft = 9 ccds)
+  \item ccd (there are 189 ccds per focal plane)
+  \item amp (there are 16 amplifiers per ccd).
+\end{itemize}
+
+When appropriate, we denormalize information into ``lower-level'' table (eg, information from ccd-level is repeated for each amp) to avoid extraneous joins for common accesses.
+
+In addition to fully structured tables, for selected tables we expect to maintain an additional table with key-value pairs. This will allow us to introduce additional ``columns'' without altering corresponding table's schema (at the cost of degraded performance). This might be particularly handy when trying to determine what information would be particularly useful to derive from the existing columns. Periodically, most commonly used key-value pairs will be converted into regular columns.
+
+In addition, we maintain a table that maps raw exposures to visits. Typically it will contain two rows for each visit.
+
+\subsubsection{Sizes}
+
+Size of the metadata tables is not posing any major challenge. LSST is expected to produce $\sim$one thousand visits per night, which leads to $\sim$3 million visits during 10 year lifetime of the survey.
+
+\subsubsection{Diagram}
+
+The diagram below depicts the metadata tables, and their relations.
+
+
 \section{Baseline Schema}
 
+\rowcolors{2}{gray!25}{white}
 \input{core_tables}
 
+\rowcolors{2}{white}{white}
 \appendix
 % Include all the relevant bib files.
 % https://lsst-texmf.lsst.io/lsstdoc.html#bibliographies

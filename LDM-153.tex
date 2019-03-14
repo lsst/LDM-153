@@ -16,6 +16,45 @@
 
 \renewcommand\cellalign{tl}
 
+% Environment for displaying the schema tables in
+% a consistent manner. Two arguments are the
+% caption and short caption that differ for each table.
+% The third argument is the label to use for the table
+\newenvironment{schema}[3]{%
+\setlength\LTleft{0pt}
+\setlength\LTright{\fill}
+\begin{longtable}{p{1.3in}lp{1in}p{3.3in}}
+
+% First header has a caption with a label
+\rowcolor{white}
+\caption[#1]{#2
+% We don't have proper labels right now.
+% \label{#3}
+}\\
+
+\hline \rowcolor{white}
+\textbf{Column Name} & \textbf{Data type} & \textbf{UCD} & \textbf{Description}\\ \hline
+\endfirsthead
+
+% Subsequent headers have the caption but no label
+\rowcolor{white}
+\caption[#1]{#2}\\
+
+\hline \rowcolor{white}
+\textbf{Column Name} & \textbf{Data type} & \textbf{UCD} & \textbf{Description}\\ \hline
+\endhead
+
+\hline \rowcolor{white}
+\multicolumn{4}{r}{\emph{Continued on next page}} \\
+\endfoot
+
+\hline\hline
+\endlastfoot
+}{%
+\hline
+\end{longtable}
+}
+
 % To add a short-form title:
 % \title[Short title]{Title}
 \title{LSST Database Baseline Schema}

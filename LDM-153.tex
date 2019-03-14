@@ -1,4 +1,4 @@
-\documentclass[DM,toc]{lsstdoc}
+\documentclass[DM,lsstdraft,toc]{lsstdoc}
 
 % lsstdoc documentation: https://lsst-texmf.lsst.io/lsstdoc.html
 
@@ -105,7 +105,7 @@ Jacek Becla
 
 \section{Schema Format and Documentation}
 
-The LSST Database schema master files are stored in ASCII files and version-controlled (git) together with the rest of the LSST software. Each major schema version has its own dedicated file. We currently have a baseline schema, and 6 different versions of schemas for different data challenges DC3a, PT1.1, PT1.2, ImSim, S12\_sdss, and S12\_lsstsim.
+The LSST Database schema master files are stored in ASCII files and version-controlled (git) together with the rest of the LSST software. Each major schema version has its own dedicated file. We currently have a baseline schema, and 6 different versions of schemas for different data challenges: DC3a, PT1.1, PT1.2, ImSim, S12\_sdss, and S12\_lsstsim.
 
 Each schema file contains a schema definition interleaved with rich table-level and column-level comments. Additional notes such as information about units are embedded. Comments follow a special HTML-like format that enables auto-generation of web-browsable pages. This approach maximizes vendor-independence of both the schema definition and its documentation. It enables richer documentation, and allows us to add special annotations, not supported by off-the-shelf RDBMS systems.
 
@@ -182,11 +182,11 @@ To optimize disk I/O and ensure frequently accessed columns are collocated, and 
 The Object Catalog is partitioned vertically into the following tables: 
 
 \begin{itemize}
-  \item Object – a table with $\sim$330 most frequently used columns. This table is expected to contain $\sim$47 billion rows by the end of the survey, containing $\sim$48\% in the first data release.
-  \item Object\_APMean – a very narrow table containing aperture photometry mean values, on average $\sim$8 per object.
-  \item Object\_Periodic – a very narrow table containing definitions of periodic features, on average $\sim$32 per object.
-  \item Object\_NonPeriodic – a very narrow table containing definitions of non-periodic features, on average $\sim$20 per object.
-  \item Object\_Extra – a very wide table with remaining, less frequently used columns, such as covariances for 2 models (Point Source and Bulge+Disk), and Bulge+Disk samples. These are packed into 3 blobs, 66, 168, and 7,200 elements in each blob respectively. Packing is driven by expected access pattern: entire set of elements in a blob or nothing will be accessed. There will be one such row for each row in the Object table.  
+  \item Object --- a table with $\sim$330 most frequently used columns. This table is expected to contain $\sim$47 billion rows by the end of the survey, containing $\sim$48\% in the first data release.
+  \item Object\_APMean --- a very narrow table containing aperture photometry mean values, on average $\sim$8 per object.
+  \item Object\_Periodic --- a very narrow table containing definitions of periodic features, on average $\sim$32 per object.
+  \item Object\_NonPeriodic --- a very narrow table containing definitions of non-periodic features, on average $\sim$20 per object.
+  \item Object\_Extra --- a very wide table with remaining, less frequently used columns, such as covariances for 2 models (Point Source and Bulge+Disk), and Bulge+Disk samples. These are packed into 3 blobs, 66, 168, and 7,200 elements in each blob respectively. Packing is driven by expected access pattern: entire set of elements in a blob or nothing will be accessed. There will be one such row for each row in the Object table.
 \end{itemize}
 
 The Source Catalog consists of two tables: Source and Source\_APMean, the latter is similar to Object\_APMean.
@@ -196,6 +196,11 @@ Since managing trillions of rows in a single table is close to impossible, in ad
 \subsubsection{Diagram}
 
 The diagram below depicts all core tables, and their relations.
+
+\begin{figure}
+  \centering\includegraphics[scale=0.80]{diagrams/coretables}
+  \caption{Core table relationships}
+\end{figure}
 
 \subsection{Metadata Catalogs}
 
@@ -222,6 +227,11 @@ Size of the metadata tables is not posing any major challenge. LSST is expected 
 
 The diagram below depicts the metadata tables, and their relations.
 
+\begin{figure}
+  \centering\includegraphics[scale=0.8]{diagrams/metadata}
+  \caption{Metadata table relationships}
+\end{figure}
+
 \subsection{Provenance}
 
 In LSST, we define Provenance as execution trace, or in other words information ``how we came up with the data''. Provenance will be used primarily:
@@ -245,6 +255,21 @@ In terms of size, we expect provenance to be a very small fraction of the entire
 \subsubsection{Diagrams}
 
 The diagram below depicts the metadata tables, and their relations. Note that there is a separate section discussing provenance design in details, see below \textit{Selected Design Aspects} below.
+
+\begin{figure}
+  \centering\includegraphics[scale=0.80]{diagrams/provenance}
+  \caption{Provenance table relationships}
+\end{figure}
+
+\begin{figure}
+  \centering\includegraphics[scale=0.70]{diagrams/hardware_provenance}
+  \caption{Hardware provenance table relationships}
+\end{figure}
+
+\begin{figure}
+  \centering\includegraphics[scale=0.70]{diagrams/software_provenance}
+  \caption{Software provenance table relationships}
+\end{figure}
 
 \subsection{Other Tables}
 
@@ -286,7 +311,7 @@ Every data element that needs to have provenance tracked (for example, every row
 Such an approach has two important pros:
 
 \begin{itemize}
-  \item \textbf{Flexibility}: It allows us to decouple configurable elements from Objects, Sources, Exposures, etc. - they are very loosely coupled through time range only. In particular, it means that new configurable items can be added or removed from the system at any given time with no need to do schema evolution and no need to update existing data.
+  \item \textbf{Flexibility}: It allows us to decouple configurable elements from Objects, Sources, Exposures, etc. --- they are very loosely coupled through time range only. In particular, it means that new configurable items can be added or removed from the system at any given time with no need to do schema evolution and no need to update existing data.
 
   \item \textbf{Space-efficiency}: It is clear that components of the system will be changing relatively frequently. Minimizing the storage required to track these changes is essential. In our case, a new configuration will only require storage for that configuration. Each Object/Source/Exposure only needs to store one procHistoryId to get access to hundreds of different configurations.
 \end{itemize}

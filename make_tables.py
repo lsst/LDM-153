@@ -9,6 +9,7 @@ def escape_tex(string):
     """
     replacements = {"#": "\#",
                     "^2": "$^2$",
+                    "^4": "$^4$",
                     "_": "\_",
                     "<": "$<$",
                     "%": "\%",
@@ -27,7 +28,8 @@ def split_ucd(string):
     at a period. The latter is not very desirable but was the only way to
     make certain long UCDs fit in the column.
     """
-    return string.replace(";", "; ").replace(".", ".\\linebreak[0]")
+    # .replace(".", ".\\linebreak[0]")
+    return string.replace(";", "; ")
 
 
 def make_table_tex(table):
@@ -39,8 +41,7 @@ def make_table_tex(table):
     output = io.StringIO()
     table_name = escape_tex(table['name'])
 
-    print("\\subsection{{{:s}}}".format(table_name), file=output)
-    print("", file=output)
+    print("\\subsection{{{:s}}}\n".format(table_name), file=output)
     print(escape_tex(table.get("description", "")), file=output)
     print("", file=output)
 
@@ -56,10 +57,15 @@ def make_table_tex(table):
             format_string += " & {:s} & {:s} & {:s} \\\\"
         else:
             format_string = "{:s} & {:s} & {:s} & {:s}\\\\"
+
+        if("ivoa:ucd" in column):
+            ucd_string = " [{:s}]".format(split_ucd(column["ivoa:ucd"]))
+        else:
+            ucd_string = ""
         print(format_string.format(escape_tex(column["name"]),
                                    column["datatype"],
-                                   split_ucd(column.get("ivoa:ucd", "")),
-                                   escape_tex(column.get("description", ""))),
+                                   escape_tex(column.get("fits:tunit", "")),
+                                   escape_tex(column.get("description", "") + ucd_string)),
               file=output)
     print("\\end{schema}\n\n", file=output)
     return output

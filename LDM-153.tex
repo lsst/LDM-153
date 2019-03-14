@@ -23,7 +23,7 @@
 \newenvironment{schema}[3]{%
 \setlength\LTleft{0pt}
 \setlength\LTright{\fill}
-\begin{longtable}{p{1.3in}lp{1in}p{3.3in}}
+\begin{longtable}{p{1.3in}lp{0.8in}p{3.5in}}
 
 % First header has a caption with a label
 \rowcolor{white}
@@ -33,7 +33,7 @@
 }\\
 
 \hline \rowcolor{white}
-\textbf{Column Name} & \textbf{Data type} & \textbf{UCD} & \textbf{Description}\\ \hline
+\textbf{Column Name} & \textbf{Data type} & \textbf{Unit} & \textbf{Description [UCD]}\\ \hline
 \endfirsthead
 
 % Subsequent headers have the caption but no label
@@ -41,7 +41,7 @@
 \caption[#1]{#2}\\
 
 \hline \rowcolor{white}
-\textbf{Column Name} & \textbf{Data type} & \textbf{UCD} & \textbf{Description}\\ \hline
+\textbf{Column Name} & \textbf{Data type} & \textbf{Unit} & \textbf{Description [UCD]}\\ \hline
 \endhead
 
 \hline \rowcolor{white}

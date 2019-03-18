@@ -32,7 +32,7 @@ def split_ucd(string):
     return string.replace(";", "; ")
 
 
-def make_table_tex(table):
+def make_table_tex(table, column_list_output=None):
     """
     Generate LaTeX output from an input table in YAML format. Returns a
     StringIO object.
@@ -67,6 +67,8 @@ def make_table_tex(table):
                                    escape_tex(column.get("fits:tunit", "")),
                                    escape_tex(column.get("description", "") + ucd_string)),
               file=output)
+        if column_list_output is not None:
+            print("{:s},{:s}".format(table['name'], column['name']), file=column_list_output)
     print("\\end{schema}\n\n", file=output)
     return output
 
@@ -80,8 +82,13 @@ if __name__ == "__main__":
         yaml_contents = yaml.load(f)
 
     output_file = open(output_filename, "w")
+
+    # The column list output is optional and can be disabled
+    # once the Yaml schema file is deemed authoritative.
+    column_list_file = open("yaml_column_list.txt", "w")
     for table in yaml_contents['tables']:
-        tex_output = make_table_tex(table)
+        tex_output = make_table_tex(table, column_list_output=column_list_file)
         output_file.write(tex_output.getvalue())
 
+    column_list_file.close()
     output_file.close()

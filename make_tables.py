@@ -1,6 +1,7 @@
 
 import yaml
 import io
+import subprocess
 
 
 def escape_tex(string):
@@ -73,10 +74,17 @@ def make_table_tex(table, column_list_output=None):
     return output
 
 
+def submodule_sha(submodule_path):
+    result = subprocess.run("git submodule status {:s} |  cut -c 2-8".format(submodule_path),
+                            shell=True, stdout=subprocess.PIPE)
+    sha = result.stdout.strip()
+    return sha
+
 if __name__ == "__main__":
 
     output_filename = "core_tables.tex"
     yaml_filename = "cat/yml/baselineSchema.yaml"
+    version_filename = "version_string.tex"
 
     with open(yaml_filename) as f:
         yaml_contents = yaml.load(f)
@@ -92,3 +100,9 @@ if __name__ == "__main__":
 
     column_list_file.close()
     output_file.close()
+
+    with open(version_filename, "w") as f:
+        sha = submodule_sha("cat").decode('ascii')
+        format_string = "This schema corresponds to git commit \\texttt{{{:s}}} in the cat package."
+        print(format_string.format(sha), file=f)
+

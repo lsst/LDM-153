@@ -12,15 +12,15 @@ OBJ=$(SRC:.tex=.pdf)
 #Default when you type make
 all: $(OBJ)
 
-$(OBJ): $(tex) core_tables.tex acronyms.tex
+$(OBJ): $(tex) core_tables.tex
 	latexmk -bibtex -xelatex -f $(SRC)
 
 #core_tables.tex: make_tables.py
 #	python3 make_tables.py
 
 #The generateAcronyms.py  script is in lsst-texmf/bin - put that in the path
-acronyms.tex :$(tex) myacronyms.txt
-	lsst-texmf/bin/generateAcronyms.py   $(tex)
+#acronyms.tex :$(tex) myacronyms.txt
+#	lsst-texmf/bin/generateAcronyms.py   $(tex)
 
 clean :
 	latexmk -c

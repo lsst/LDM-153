@@ -6,8 +6,10 @@ language: python
 python:
   - '3.6'
 before_install:
-  - "pip install 'lander>=0.1.0,<0.2'"
+  - "pip install 'lander>=0.1.0,<0.2' 'pyyaml>=3.0,<4'"
 script:
+  # Build the LaTeX tables from yaml
+  - "python make_tables.py"
   # Compile PDF using containerized lsst-texmf
   - "docker run --rm -v `pwd`:/workspace -w /workspace lsstsqre/lsst-texmf:latest sh -c 'make'"
   # Deploy website. See https://github.com/lsst-sqre/lander for CLI options

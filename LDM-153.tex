@@ -63,6 +63,9 @@
 % \setDocSubtitle{A subtitle}
 
 \author{%
+Colin Slater,
+Fritz Mueller,
+Brian Van Klaveren,
 Jacek Becla
 }
 
@@ -95,6 +98,7 @@ Jacek Becla
   \addtohist{12}{2013-09-30}{Resynchronized with the latest Data Products Definition Document (v Sep 23 2013) and corresponding schema.}{Jacek Becla}
   \addtohist{13}{2013-10-10}{TCT approved}{R. Allsman}
   \addtohist{14}{2013-10-18}{Fixed Table of Contents}{Jacek Becla}
+  \addtohist{15}{2019-06-27}{Switch to yaml-defined schema}{Colin Slater}
 }
 
 \begin{document}
@@ -105,7 +109,7 @@ Jacek Becla
 
 \section{Schema Format and Documentation}
 
-The LSST Database schema master files are stored in yaml files which are designed to be read by the ``Felis''\footnote{https://github.com/lsst-dm/felis/} schema manipulation tool. The files live in the \texttt{cat} package and are version-controlled via git together with the rest of the LSST software.
+The LSST Database schema master files are stored in yaml files which are designed to be read by the ``Felis''\footnote{\url{https://github.com/lsst-dm/felis/}} schema manipulation tool. The files live in the \texttt{cat} package and are version-controlled via git together with the rest of the LSST software.
 
 The yaml files are designed to contain both the required attributes necessary for instantiating a database table and extra per-column metadata for enabling a richer description of the data, such as additional descriptive text, physical units, or IVOA UCDs. The choice of a yaml format also enables additional metadata attributes to be added as the need arises during development.
 
@@ -115,11 +119,11 @@ The schema tables presented in this document are automatically generated from th
 
 We maintain a small set of stored procedures and functions, as well as a set of user-defined functions (UDFs). Since stored procedures and functions typically are vendor-specific, we have tried to limit them to the bare minimum; nevertheless, we now have $\sim10$ such procedures, most related to converting different time formats. The most frequently used functions are written as native user-defined functions for performance and portability reasons. They include support for spherical geometry, photometry conversions, and statistical functions (e.g., median). These spatial functions rely on custom HTM indices to allow fast spatial selections, such as point in circle, polygon or ellipse searches. We are collaborating with the team from Johns Hopkins University that implemented HTM indexing and UDFs for SDSS, and we already incorporated many of their lessons learned into our UDFs (their UDFs were written in C\# for SQL Server, since then the SDSS team converted them to C++ using automated conversion tools.)
 
-Since these UDFs are not LSST-specific and may be of broader interest (to MySQL community and beyond), we maintain them as an open-source project independent from LSST. This project, SciSQL, is hosted on launchpad.net (see \url{https://github.com/smonkewitz/scisql}).
+Since these UDFs are not LSST-specific and may be of broader interest (to MySQL community and beyond), we maintain them as an open-source project independent from LSST. This project, SciSQL, is hosted at \url{https://github.com/smonkewitz/scisql}.
 
 \section{Selected Catalogs}
 
-The baseline schema is driven primarily by the Data Products Definitions Document (LSE-163). The schema can be divided into several logical groups:
+The baseline schema is driven primarily by the Data Products Definitions Document (\DPDD). The schema can be divided into several logical groups:
 
 \begin{itemize}
   \item Core Catalogs
@@ -374,13 +378,7 @@ Mapping tables follows its own naming scheme: \_<table X name>\_To\_<table Y nam
 \input{core_tables}
 
 \rowcolors{2}{white}{white}
-\appendix
-% Include all the relevant bib files.
-% https://lsst-texmf.lsst.io/lsstdoc.html#bibliographies
-\section{References} \label{sec:bib}
+
 \bibliography{lsst,lsst-dm,refs_ads,refs,books}
 
-%Make sure lsst-texmf/bin/generateAcronyms.py is in your path
-%\section{Acronyms used in this document}\label{sec:acronyms}
-%\input{acronyms.tex}
 \end{document}

@@ -109,11 +109,11 @@ Jacek Becla
 
 \section{Schema Format and Documentation}
 
-The LSST Database schema master files are stored in yaml files which are designed to be read by the ``Felis''\footnote{\url{https://github.com/lsst-dm/felis/}} schema manipulation tool. The files live in the \texttt{cat} package and are version-controlled via git together with the rest of the LSST software.
+The LSST Database schema master files are stored in yaml files which are designed to be read by the ``Felis''\footnote{\url{https://github.com/lsst-dm/felis/}} schema manipulation tool. The files live in the \texttt{sdm\_schemas}\footnote{\url{https://github.com/lsst/sdm\_schemas/}} package and are version-controlled via git together with the rest of the LSST software.
 
 The yaml files are designed to contain both the required attributes necessary for instantiating a database table and extra per-column metadata for enabling a richer description of the data, such as additional descriptive text, physical units, or IVOA UCDs. The choice of a yaml format also enables additional metadata attributes to be added as the need arises during development.
 
-The schema tables presented in this document are automatically generated from the yaml files in the \texttt{cat} package.
+The schema tables presented in this document are automatically generated from the yaml files in the \texttt{sdm\_schemas} package.
 
 \section{Stored Procedures and Functions}
 

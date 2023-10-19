@@ -83,7 +83,7 @@ def submodule_sha(submodule_path):
 if __name__ == "__main__":
 
     output_filename = "core_tables.tex"
-    yaml_filename = "cat/yml/baselineSchema.yaml"
+    yaml_filename = "sdm_schemas/yml/baselineSchema.yaml"
     version_filename = "version_string.tex"
 
     with open(yaml_filename) as f:
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     output_file.close()
 
     with open(version_filename, "w") as f:
-        sha = submodule_sha("cat").decode('ascii')
-        format_string = "This schema corresponds to git commit \\texttt{{{:s}}} in the cat package."
+        sha = submodule_sha("sdm_schemas").decode('ascii')
+        format_string = "This schema corresponds to git commit \\texttt{{{:s}}} in the sdm\_schemas package."
         print(format_string.format(sha), file=f)
 

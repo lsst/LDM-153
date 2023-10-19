@@ -109,11 +109,11 @@ Jacek Becla
 
 \section{Schema Format and Documentation}
 
-The LSST Database schema master files are stored in yaml files which are designed to be read by the ``Felis''\footnote{\url{https://github.com/lsst-dm/felis/}} schema manipulation tool. The files live in the \texttt{cat} package and are version-controlled via git together with the rest of the LSST software.
+The LSST Database schema master files are stored in yaml files which are designed to be read by the ``Felis''\footnote{\url{https://github.com/lsst-dm/felis/}} schema manipulation tool. The files live in the \texttt{sdm\_schemas}\footnote{\url{https://github.com/lsst/sdm\_schemas/}} package and are version-controlled via git together with the rest of the LSST software.
 
 The yaml files are designed to contain both the required attributes necessary for instantiating a database table and extra per-column metadata for enabling a richer description of the data, such as additional descriptive text, physical units, or IVOA UCDs. The choice of a yaml format also enables additional metadata attributes to be added as the need arises during development.
 
-The schema tables presented in this document are automatically generated from the yaml files in the \texttt{cat} package.
+The schema tables presented in this document are automatically generated from the yaml files in the \texttt{sdm\_schemas} package.
 
 \section{Stored Procedures and Functions}
 
@@ -368,6 +368,43 @@ Component: Exposure, Object, Source, Psf, Wcs...
 Postfix: optional
 
 Mapping tables follows its own naming scheme: \_<table X name>\_To\_<table Y name>
+
+\section{Conventions for NULL and missing data}
+
+In addition to defining the table columns, an important component of the data model is standardizing the representation of missing and out-of-range values. These conventions must cover the variety of formats used for storing the data during processing (prior to loading into a database), as well as any other formats that data may be presented to the users. In practice, this means we must pay close attention to how data are stored in FITS files (during processing) and Parquet files (from which the relational database is loaded, and which may also be available to users). Loading tables into a database may also involve creating intermediate CSV files; these are not user-facing, but we include requirements on CSV files here to reduce the potential for discrepancies in NULL handling.
+
+
+In the following conventions, ``nullable'' is used as a synonym for \textbf{not} applying a \texttt{NOT NULL} constraint to a column.
+
+\begin{enumerate}
+\item Float columns must use NaN in FITS and Parquet to represent unknown or invalid values, which must be be converted to NULL in an RDBMS. RDBMS loading must also accept +/-Infinity and convert them to NULL.
+
+      Rationale: For floating point columns, both IEEE 754 and RDBMS's can represent invalid values without resorting to sentinel values.
+
+\item Integer columns must only be nullable if they are foreign keys to other tables. Integer measurements that need to report an error condition should use a flag column. Ints cannot be NaN.
+
+      Rationale: There is no standard for representing invalid data as integers, other than assigning a sentinel. RDBMS's can report NULL, but this has no equivalent in FITS or parquet.  Most uses of ints in measurements are quantities like a count of the pixels in a source, which can be meaningfully zero when e.g. no data is available.
+
+\item Foreign key columns must use a value of zero to represent ``no linked row'' in FITS and Parquet, which must be converted to NULL in an RDBMS. 
+
+      Rationale: A NULL in the RDBMS is required to prevent spurious joins.
+
+\item Parquet integers must always be signed, to support Java readers.
+
+      Rationale: Some python libraries are capable of writing unsigned integers to parquet files, but this is highly non-portable.
+
+\item CSV files must use the string ``\backslash N'' to represent NULL. CSV files must not contain +/-Infinity or NaN.
+
+      Rationale: Many other strings would work, but adopting a single convention will minimize conflicts.
+
+\item +/-Infinity must not be meaningfully distinct from NaN in pipeline outputs.
+
+      Rationale: The SQL standard only has NULL, and cannot distinguish between +/-Infinity and NaN.
+
+\item RDBMS schemas must assume that all FLOAT pipeline columns are nullable.
+
+      Rationale: any enforcement of required values should be performed at the pipeline processing stage. If undesired NULLs are present in measurement outputs, then catching them at database-load time is too late.n
+\end{enumerate}
 
 
 \section{Baseline Schema}

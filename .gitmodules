@@ -1,6 +1,6 @@
 [submodule "lsst-texmf"]
 	path = lsst-texmf
 	url = https://github.com/lsst/lsst-texmf
-[submodule "cat"]
-	path = cat
-	url = https://github.com/lsst/cat
+[submodule "sdm_schemas"]
+	path = sdm_schemas
+	url = https://github.com/lsst/sdm_schemas
